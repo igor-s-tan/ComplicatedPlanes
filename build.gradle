@@ -1,0 +1,143 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net'}
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: 'org.spongepowered.mixin'
+
+version = minecraft_version + "-" + mod_version
+group = 'com.igorstan.complicatedplanes'
+archivesBaseName = 'complicatedplanes'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(11)
+repositories {
+    maven {
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
+println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+minecraft {
+    mappings channel: 'official', version: "${minecraft_version}"
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            //arg "-mixin.config=complicatedplanes.mixin.json"
+
+            mods {
+                complicatedplanes {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            //arg "-mixin.config=complicatedplanes.general.mixin.json"
+
+            mods {
+                complicatedplanes {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'complicatedplanes', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                complicatedplanes {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    implementation fg.deobf("curse.maven:simpleplanes-388908:3390560")
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
+
+
+    compile fg.deobf("curse.maven:metalbarrels-324985:3415449")
+
+    compile fg.deobf("curse.maven:thermallocomotion-406959:3555670")
+    compile fg.deobf("curse.maven:thermalfoundation-222880:3556953")
+
+    compile fg.deobf("curse.maven:cothcore-69162:3556973")
+
+    compile fg.deobf("curse.maven:cctweaked-282001:4061944")
+
+    compile fg.deobf("curse.maven:advancedperipherals-431725:3857897")
+
+    testAnnotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
+
+}
+
+//mixin {
+//    add sourceSets.main, "complicatedplanes.mixin-refmap.json"
+//}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "complicatedplanes",
+            "Specification-Vendor": "igorstan",
+            "Specification-Version": "${version}",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor" :"igorstan",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),\
+            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+            "TweakOrder": 0,
+            //"MixinConfigs" : "complicatedplanes.mixin.json"
+        ])
+    }
+}
+
+
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
