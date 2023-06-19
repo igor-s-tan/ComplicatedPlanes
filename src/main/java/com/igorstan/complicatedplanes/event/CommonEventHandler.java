@@ -78,9 +78,8 @@ public class CommonEventHandler {
             ResourceLocation name = new ResourceLocation("complicatedplanes:computer");
             if(planeEntity.upgrades.containsKey(name)) {
                 ComputerUpgrade upgrade = (ComputerUpgrade) planeEntity.upgrades.get(name);
-                System.out.println(upgrade.xxaa);
                 ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-                Networking.INSTANCE.sendTo(new MovementPacket(upgrade.xxaa), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                Networking.INSTANCE.sendTo(new MovementPacket(upgrade.xxaa, upgrade.zzaa), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
             }
         }
     }

@@ -2,6 +2,7 @@ package com.igorstan.complicatedplanes.upgrades;
 
 
 import com.google.common.base.Objects;
+
 import com.igorstan.complicatedplanes.api.PlaneAPI;
 import com.igorstan.complicatedplanes.containter.ComputerContainerProvider;
 import com.igorstan.complicatedplanes.containter.IComputerEntity;
@@ -50,12 +51,16 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.INamedContainerProvider;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.ITextComponent;
 
@@ -64,10 +69,15 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.model.data.EmptyModelData;
 
 
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
+import net.minecraftforge.registries.ForgeRegistries;
+import org.antlr.v4.runtime.misc.Pair;
 import xyz.przemyk.simpleplanes.entities.PlaneEntity;
 import xyz.przemyk.simpleplanes.setup.SimplePlanesEntities;
 import xyz.przemyk.simpleplanes.upgrades.LargeUpgrade;
@@ -79,9 +89,10 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 public class ComputerUpgrade extends Upgrade implements IComputerEntity {
-    public final ItemStackHandler itemStackHandler = new ItemStackHandler(27);
     private final ComputerFamily family;
     public float xxaa;
+    public float zzaa;
+    public final ItemStackHandler itemStackHandler = new ItemStackHandler(2);
 
     public ComputerUpgrade(PlaneEntity planeEntity, ComputerFamily family) {
         super((UpgradeType) Upgrades.COMPUTER.get(), planeEntity);
@@ -224,4 +235,31 @@ public class ComputerUpgrade extends Upgrade implements IComputerEntity {
     public ItemStack withFamily(@Nonnull PlaneEntity var1, @Nonnull ComputerFamily var2) {
         return ComputerItemFactory.create(this.getComputerID(planeEntity), this.getLabel(planeEntity), family);
     }
+
+    public CompoundNBT serializeNBT() {
+        CompoundNBT nbt = this.itemStackHandler.serializeNBT();
+        nbt.putFloat("xxaa", this.xxaa);
+        nbt.putFloat("zzaa", this.zzaa);
+        return nbt;
+    }
+
+    public void deserializeNBT(CompoundNBT nbt) {
+        this.itemStackHandler.deserializeNBT(nbt);
+        this.xxaa = nbt.getFloat("xxaa");
+        this.zzaa = nbt.getFloat("zzaa");
+    }
+
+//    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+//        return cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.floatLazyOptional.cast() : super.getCapability(cap, side);
+//    }
+//
+//
+//    public final LazyOptional<Pair<Float, Float>> floatLazyOptional = LazyOptional.of(() -> new Pair<>(this.xxaa, this.zzaa));
+//
+//    protected void invalidateCaps() {
+//        super.invalidateCaps();
+//        this.floatLazyOptional.invalidate();
+//    }
+
+
 }

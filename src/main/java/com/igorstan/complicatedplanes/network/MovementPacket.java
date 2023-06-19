@@ -28,19 +28,24 @@ import javax.swing.text.JTextComponent;
 import java.awt.event.KeyEvent;
 import java.util.function.Supplier;
 
+import static java.lang.Math.abs;
+
 public class MovementPacket {
     public float xxaa;
+    public float zzaa;
 
-    public MovementPacket(float xxaa) {
+    public MovementPacket(float xxaa, float zzaa) {
         this.xxaa = xxaa;
+        this.zzaa = zzaa;
     }
 
     public static void encode(MovementPacket movementPacket, PacketBuffer buffer) {
         buffer.writeFloat(movementPacket.xxaa);
+        buffer.writeFloat(movementPacket.zzaa);
     }
 
     public static MovementPacket decode(PacketBuffer buffer) {
-        return new MovementPacket(buffer.readFloat());
+        return new MovementPacket(buffer.readFloat(), buffer.readFloat());
     }
 
     public static void handle(MovementPacket movementPacket, Supplier<NetworkEvent.Context> ctxSup) {
@@ -51,7 +56,8 @@ public class MovementPacket {
     public static void handlePacket(MovementPacket movementPacket, Supplier<NetworkEvent.Context> contextSupplier) {
         Minecraft mc = Minecraft.getInstance();
         if(mc.player != null) {
-            mc.player.xxa = movementPacket.xxaa;
+            mc.player.xxa += movementPacket.xxaa;
+            mc.player.zza += movementPacket.zzaa;
         }
     }
 }

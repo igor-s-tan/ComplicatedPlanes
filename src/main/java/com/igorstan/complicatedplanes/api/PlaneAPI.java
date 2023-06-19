@@ -52,17 +52,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class PlaneAPI extends PlaneEntity implements ILuaAPI {
+public class PlaneAPI implements ILuaAPI {
 
-    private final ServerComputer computer;
     private final PlaneEntity plane;
 
 
     public PlaneAPI(EntityType<? extends PlaneEntity> entityTypeIn, ServerComputer computer, PlaneEntity plane) {
-        super(entityTypeIn, plane.level);
-        this.computer = computer;
         this.plane = plane;
-
     }
 
 
@@ -72,54 +68,96 @@ public class PlaneAPI extends PlaneEntity implements ILuaAPI {
     }
 
     @LuaFunction
-    public final Object getXc() {
+    public final Object getX() {
         return this.plane.getX();
     }
     @LuaFunction
-    public final Object getYc() {
+    public final Object getY() {
         return this.plane.getY();
     }
     @LuaFunction
-    public final Object getZc() {
+    public final Object getZ() {
         return this.plane.getZ();
     }
 
     @LuaFunction
-    public final Object moveForward() {
-        if(plane.getPlayer() != null && !plane.isOnGround()) {
-            ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
-            Networking.INSTANCE.sendTo(new MovementPacket(1), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
-            return PlaneCommandResult.success();
-        }
-        else {
-            return PlaneCommandResult.failure();
-        }
-    }
-
-    @LuaFunction
-    public final Object moveLeft() {
+    public final PlaneCommandResult moveForward() {
         if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
             ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
-            System.out.println(player);
             ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
-            upgrade.xxaa = 1f;
-            //Networking.INSTANCE.sendTo(new MovementPacket(2), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+            if(player instanceof FakePlayer) {
+                player.zza = 1f;
+            }
+            else if(!plane.isOnGround()) {
+                upgrade.zzaa = 1f;
+            }
             return PlaneCommandResult.success();
         }
         else {
-            return PlaneCommandResult.failure();
+            return PlaneCommandResult.failure("Controlling passenger not found");
         }
     }
 
     @LuaFunction
-    public final Object moveRight() {
-        if (plane.getPlayer() != null && !plane.isOnGround()) {
+    public final PlaneCommandResult moveLeft() {
+        if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
             ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
-            Networking.INSTANCE.sendTo(new MovementPacket(3), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+            ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
+            if(player instanceof FakePlayer) {
+                player.xxa = 1f;
+            }
+            else {
+                upgrade.xxaa = 1f;
+            }
             return PlaneCommandResult.success();
-        } else {
-            return PlaneCommandResult.failure();
         }
+        else {
+            return PlaneCommandResult.failure("Controlling passenger not found");
+        }
+    }
+
+    @LuaFunction
+    public final PlaneCommandResult moveRight() {
+        if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
+            ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
+            ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
+            if(player instanceof FakePlayer) {
+                player.xxa = -1f;
+            }
+            else {
+                upgrade.xxaa = -1f;
+            }
+            return PlaneCommandResult.success();
+        }
+        else {
+            return PlaneCommandResult.failure("Controlling passenger not found");
+        }
+    }
+
+    @LuaFunction
+    public final PlaneCommandResult setSpeed(double speed) {
+        if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
+            plane.setMaxSpeed((float) speed);
+            return PlaneCommandResult.success();
+        }
+        else {
+            return PlaneCommandResult.failure("Controlling passenger not found");
+        }
+    }
+
+    @LuaFunction
+    public final Object isOnGround() {
+        return plane.isOnGround();
+    }
+
+    @LuaFunction
+    public final Object isOnLava() {
+        return plane.isOnFire();
+    }
+
+    @LuaFunction
+    public final Object isOnWater() {
+        return plane.isOnWater();
     }
 }
 
