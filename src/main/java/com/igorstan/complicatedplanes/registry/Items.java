@@ -1,6 +1,7 @@
 package com.igorstan.complicatedplanes.registry;
 
-import com.igorstan.complicatedplanes.AccessItem;
+import com.igorstan.complicatedplanes.ComputerAccessItem;
+
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
@@ -16,7 +17,7 @@ import xyz.przemyk.simpleplanes.setup.SimplePlanesItems;
 public class Items {
     public static final RegistryObject<Item> LAVA_FLOATY_BEDDING;
     public static final RegistryObject<Item> LAVA_ENGINE;
-    public static final RegistryObject<Item> ACCESS_ITEM;
+    public static final RegistryObject<Item> COMPUTER_ACCESS_ITEM;
     public static final DeferredRegister<Item> ITEMS;
     public static void init() {
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
@@ -29,8 +30,9 @@ public class Items {
         LAVA_ENGINE = ITEMS.register("lava_engine", () -> {
             return new Item((new Item.Properties()).tab(SimplePlanesItems.ITEM_GROUP));
         });
-        ACCESS_ITEM = ITEMS.register("access_item", () -> {
-            return new AccessItem((new Item.Properties()).tab(SimplePlanesItems.ITEM_GROUP));
+        COMPUTER_ACCESS_ITEM = ITEMS.register("computer_access_item", () -> {
+            return new ComputerAccessItem((new Item.Properties()).tab(SimplePlanesItems.ITEM_GROUP));
         });
+
     }
 }

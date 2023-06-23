@@ -19,7 +19,10 @@ public class Networking {
         int id = -1;
         ++id;
         INSTANCE.registerMessage(id, OpenBarrelInventoryPacket.class, OpenBarrelInventoryPacket::toBytes, OpenBarrelInventoryPacket::new, OpenBarrelInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        INSTANCE.registerMessage(id+1, MovementPacket.class, MovementPacket::encode, MovementPacket::decode, MovementPacket::handle);
+        ++id;
+        INSTANCE.registerMessage(id, MovementPacket.class, MovementPacket::encode, MovementPacket::decode, MovementPacket::handle);
+        ++id;
+        INSTANCE.registerMessage(id, OpenComputerPacket.class, OpenComputerPacket::toBytes, OpenComputerPacket::new, OpenComputerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
 }

@@ -3,6 +3,7 @@ package com.igorstan.complicatedplanes.upgrades;
 
 import com.google.common.base.Objects;
 
+import com.igorstan.complicatedplanes.ComplicatedPlanesMod;
 import com.igorstan.complicatedplanes.api.PlaneAPI;
 import com.igorstan.complicatedplanes.containter.ComputerContainerProvider;
 import com.igorstan.complicatedplanes.containter.IComputerEntity;
@@ -15,6 +16,7 @@ import dan200.computercraft.api.ComputerCraftAPI;
 import dan200.computercraft.api.pocket.IPocketUpgrade;
 import dan200.computercraft.core.computer.Computer;
 import dan200.computercraft.core.computer.ComputerSide;
+import dan200.computercraft.shared.ComputerCraftTags;
 import dan200.computercraft.shared.Registry;
 
 import dan200.computercraft.shared.computer.apis.CommandAPI;
@@ -38,6 +40,9 @@ import net.minecraft.block.BlockState;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
 import net.minecraft.entity.Entity;
@@ -61,6 +66,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.ITextComponent;
 
@@ -69,6 +75,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.model.data.EmptyModelData;
 
 
+import net.minecraftforge.client.model.pipeline.VertexBufferConsumer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -78,38 +85,31 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import net.minecraftforge.registries.ForgeRegistries;
 import org.antlr.v4.runtime.misc.Pair;
+import org.spongepowered.asm.mixin.struct.MemberRef;
+import xyz.przemyk.simpleplanes.client.render.models.PlaneModel;
 import xyz.przemyk.simpleplanes.entities.PlaneEntity;
 import xyz.przemyk.simpleplanes.setup.SimplePlanesEntities;
 import xyz.przemyk.simpleplanes.upgrades.LargeUpgrade;
 import xyz.przemyk.simpleplanes.upgrades.Upgrade;
 import xyz.przemyk.simpleplanes.upgrades.UpgradeType;
+import xyz.przemyk.simpleplanes.upgrades.floating.FloatingModel;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 public class ComputerUpgrade extends Upgrade implements IComputerEntity {
     private final ComputerFamily family;
+    public static final ResourceLocation TEXTURE = new ResourceLocation("complicatedplanes", "textures/plane_upgrades/computer.png");
+
     public float xxaa;
     public float zzaa;
     public final ItemStackHandler itemStackHandler = new ItemStackHandler(2);
-
+    public static final ResourceLocation COMPUTER_TEXTURE = new ResourceLocation("complicatedplanes/");
     public ComputerUpgrade(PlaneEntity planeEntity, ComputerFamily family) {
         super((UpgradeType) Upgrades.COMPUTER.get(), planeEntity);
         this.family = family;
-    }
-
-
-    public void onItemRightClick(PlayerInteractEvent.RightClickItem event) {
-        ItemStack stack = event.getItemStack();
-        if (!this.planeEntity.level.isClientSide) {
-            ServerComputer computer = this.createServerComputer((ServerWorld)this.planeEntity.level, this.planeEntity.getPlayer(), this.planeEntity.getPlayer().inventory, planeEntity);
-            computer.turnOn();
-            boolean stop = false;
-            if (!stop) {
-                (new ComputerContainerData(computer, stack)).open(this.planeEntity.getPlayer(), new ComputerContainerProvider(computer, this, this.getPlaneEntity(), false));
-            }
-        }
     }
 
 
@@ -142,17 +142,9 @@ public class ComputerUpgrade extends Upgrade implements IComputerEntity {
         matrixStack.pushPose();
         EntityType<?> entityType = this.planeEntity.getType();
         if (entityType == SimplePlanesEntities.HELICOPTER.get()) {
-            matrixStack.translate(0.0, 0.0, -0.3);
-        } else if (entityType == SimplePlanesEntities.LARGE_PLANE.get()) {
-            matrixStack.translate(0.0, 0.0, 0.1);
+            matrixStack.translate(0.0, 0.0, -0.2);
         }
-
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
-        matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
-        matrixStack.translate(-0.4, -1.0, -1.3);
-        matrixStack.scale(0.82F, 0.82F, 0.82F);
-        BlockState state = Registry.ModBlocks.COMPUTER_NORMAL.get().defaultBlockState();
-        Minecraft.getInstance().getBlockRenderer().renderBlock(state, matrixStack, buffer, packedLight, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+        ComputerUpgradeModel.INSTANCE.renderToBuffer(matrixStack, buffer.getBuffer(ComputerUpgradeModel.INSTANCE.renderType(TEXTURE)), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
         matrixStack.popPose();
     }
 
@@ -175,7 +167,7 @@ public class ComputerUpgrade extends Upgrade implements IComputerEntity {
                 setInstanceID(planeEntity, computer.register());
                 setSessionID(planeEntity, registry.getSessionID());
 
-                computer.addAPI(new PlaneAPI(SimplePlanesEntities.PLANE.get(), computer, this.planeEntity));
+                computer.addAPI(new PlaneAPI(this.planeEntity));
                 if (isMarkedOn(planeEntity) && entity instanceof PlayerEntity) {
                     computer.turnOn();
                 }
@@ -249,17 +241,6 @@ public class ComputerUpgrade extends Upgrade implements IComputerEntity {
         this.zzaa = nbt.getFloat("zzaa");
     }
 
-//    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
-//        return cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.floatLazyOptional.cast() : super.getCapability(cap, side);
-//    }
-//
-//
-//    public final LazyOptional<Pair<Float, Float>> floatLazyOptional = LazyOptional.of(() -> new Pair<>(this.xxaa, this.zzaa));
-//
-//    protected void invalidateCaps() {
-//        super.invalidateCaps();
-//        this.floatLazyOptional.invalidate();
-//    }
 
 
 }

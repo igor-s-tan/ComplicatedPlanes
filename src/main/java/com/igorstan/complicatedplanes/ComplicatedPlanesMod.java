@@ -5,18 +5,24 @@ import com.igorstan.complicatedplanes.event.CommonEventHandler;
 import com.igorstan.complicatedplanes.impl.MetalBarrelsCompat;
 import com.igorstan.complicatedplanes.network.Networking;
 import com.igorstan.complicatedplanes.registry.Containers;
+
 import com.igorstan.complicatedplanes.registry.Items;
 import com.igorstan.complicatedplanes.registry.Upgrades;
 import com.igorstan.complicatedplanes.screen.BarrelStorageScreen;
 import dan200.computercraft.shared.Registry;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.gui.widget.list.KeyBindingList;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -42,6 +48,7 @@ public class ComplicatedPlanesMod
         Upgrades.init();
         Containers.init();
         Networking.init();
+
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
@@ -58,7 +65,7 @@ public class ComplicatedPlanesMod
             SimplePlanesUpgrades.registerLargeUpgradeItem(net.minecraft.item.Items.BARREL, (UpgradeType)Upgrades.BARREL.get());
             SimplePlanesUpgrades.registerUpgradeItem((Item) Items.LAVA_ENGINE.get(), (UpgradeType)Upgrades.LAVA_ENGINE.get());
             SimplePlanesUpgrades.registerUpgradeItem(Registry.ModItems.COMPUTER_NORMAL.get(), (UpgradeType) Upgrades.COMPUTER.get());
-            SimplePlanesUpgrades.registerUpgradeItem(net.minecraft.item.Items.ACACIA_LOG, Upgrades.FAKE_PLAYER.get());
+            SimplePlanesUpgrades.registerUpgradeItem(Registry.ModItems.WIRELESS_MODEM_NORMAL.get(), Upgrades.FAKE_PLAYER.get());
             MetalBarrelsCompat.registerUpgradeItems();
         });
     }
@@ -66,6 +73,7 @@ public class ComplicatedPlanesMod
     private void doClientStuff(final FMLClientSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(ClientEventHandler.class);
         ScreenManager.register((ContainerType)Containers.BARREL_STORAGE.get(), BarrelStorageScreen::new);
+        ClientEventHandler.clientSetup();
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event)

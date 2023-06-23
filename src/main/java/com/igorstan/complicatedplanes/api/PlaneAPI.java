@@ -57,7 +57,7 @@ public class PlaneAPI implements ILuaAPI {
     private final PlaneEntity plane;
 
 
-    public PlaneAPI(EntityType<? extends PlaneEntity> entityTypeIn, ServerComputer computer, PlaneEntity plane) {
+    public PlaneAPI(PlaneEntity plane) {
         this.plane = plane;
     }
 
@@ -81,15 +81,21 @@ public class PlaneAPI implements ILuaAPI {
     }
 
     @LuaFunction
-    public final PlaneCommandResult moveForward() {
+    public final PlaneCommandResult moveUp(boolean move) {
         if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
             ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
             ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
             if(player instanceof FakePlayer) {
-                player.zza = 1f;
+                upgrade.zzaa = 0.3f;
+
+                player.zza = upgrade.zzaa;
             }
             else if(!plane.isOnGround()) {
-                upgrade.zzaa = 1f;
+                upgrade.zzaa = 0.3f;
+            }
+            if(!move) {
+                player.zza = 0f;
+                upgrade.zzaa = 0f;
             }
             return PlaneCommandResult.success();
         }
@@ -99,15 +105,20 @@ public class PlaneAPI implements ILuaAPI {
     }
 
     @LuaFunction
-    public final PlaneCommandResult moveLeft() {
+    public final PlaneCommandResult moveLeft(boolean move) {
         if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
             ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
             ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
             if(player instanceof FakePlayer) {
-                player.xxa = 1f;
+                upgrade.xxaa = 0.3f;
+                player.xxa = upgrade.xxaa;
             }
             else {
-                upgrade.xxaa = 1f;
+                upgrade.xxaa = 0.3f;
+            }
+            if(!move) {
+                player.xxa = 0f;
+                upgrade.xxaa = 0f;
             }
             return PlaneCommandResult.success();
         }
@@ -117,15 +128,20 @@ public class PlaneAPI implements ILuaAPI {
     }
 
     @LuaFunction
-    public final PlaneCommandResult moveRight() {
+    public final PlaneCommandResult moveRight(boolean move) {
         if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
             ServerPlayerEntity player = (ServerPlayerEntity) plane.getPlayer();
             ComputerUpgrade upgrade = (ComputerUpgrade) this.plane.upgrades.get(new ResourceLocation("complicatedplanes:computer"));
             if(player instanceof FakePlayer) {
-                player.xxa = -1f;
+                upgrade.xxaa = -0.3f;
+                player.xxa = upgrade.xxaa;
             }
             else {
-                upgrade.xxaa = -1f;
+                upgrade.xxaa = -0.3f;
+            }
+            if(!move) {
+                player.xxa = 0f;
+                upgrade.xxaa = 0f;
             }
             return PlaneCommandResult.success();
         }
@@ -135,15 +151,16 @@ public class PlaneAPI implements ILuaAPI {
     }
 
     @LuaFunction
-    public final PlaneCommandResult setSpeed(double speed) {
-        if((plane.getPlayer() != null) || (plane.getPlayer() instanceof FakePlayer)) {
-            plane.setMaxSpeed((float) speed);
-            return PlaneCommandResult.success();
-        }
-        else {
-            return PlaneCommandResult.failure("Controlling passenger not found");
-        }
+    public final Object setBoost(boolean boost) {
+        plane.setSprinting(boost);
+        return PlaneCommandResult.success();
     }
+
+    @LuaFunction
+    public final Object getRotationX() {return plane.getRotationVector().x;}
+
+    @LuaFunction
+    public final Object getRotationY() {return plane.getRotationVector().y;}
 
     @LuaFunction
     public final Object isOnGround() {
@@ -159,5 +176,6 @@ public class PlaneAPI implements ILuaAPI {
     public final Object isOnWater() {
         return plane.isOnWater();
     }
+
 }
 
